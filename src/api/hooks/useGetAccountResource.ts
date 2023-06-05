@@ -10,9 +10,15 @@ export type ModuleMetadata = {
   source: string;
 };
 
+export type UpgradePolicy = {
+  policy: number;
+};
+
 export type PackageMetadata = {
   name: string;
   modules: ModuleMetadata[];
+  upgrade_number?: string;
+  upgrade_policy?: UpgradePolicy;
 };
 
 export function useGetAccountResource(

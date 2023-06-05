@@ -29,6 +29,7 @@ import {useLogEventWithBasic} from "../hooks/useLogEventWithBasic";
 import {blue} from "@mui/material/colors";
 import useWdsBackend from "../../../api/hooks/useWdsBackend";
 import {useGlobalState} from "../../../global-config/GlobalConfig";
+import {useGetPolicies} from "../../../api/hooks/useGetPolicies";
 
 export interface VerifyCheckResponse {
   chainId: string;
@@ -147,7 +148,14 @@ export function Code({bytecode}: {bytecode: string}) {
   const [verified, setVerified] = useState(false);
   const [verifyInProgress, setVerifyInProgress] = useState(false);
   const wdsBack = useWdsBackend();
-  console.log(modulesTab, address, selectedModuleName);
+
+  const {
+    data: policies,
+    isLoading,
+    isError,
+    isFetched,
+  } = useGetPolicies(state.network_name, address);
+  console.log(modulesTab, address, selectedModuleName, policies);
 
   async function copyCode(event: React.MouseEvent<HTMLButtonElement>) {
     if (!sourceCode) return;
@@ -173,6 +181,10 @@ export function Code({bytecode}: {bytecode: string}) {
       setVerified(verifyCheck.isVerified);
     });
   });
+
+  if (isLoading) {
+    return null;
+  }
 
   const verifyClick = () => {
     setVerifyInProgress(true);
