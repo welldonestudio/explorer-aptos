@@ -51,7 +51,7 @@ interface ContractSidebarProps {
 }
 
 function Contract({address, isRead}: {address: string; isRead: boolean}) {
-  console.log("Contract address", address, " isRead", isRead);
+  console.log("Contract isRead", isRead);
   const theme = useTheme();
   const isWideScreen = useMediaQuery(theme.breakpoints.up("md"));
   const {data, isLoading, error} = useGetAccountModules(address);

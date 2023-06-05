@@ -35,6 +35,15 @@ export interface VerifyCheckResponse {
   moduleName: string;
   isVerified: boolean;
 }
+export interface VerifyResponse {
+  account: string;
+  moduleName: string;
+  requestedTime: number;
+  isVerified: true;
+  byteCode: number;
+  onChainByteCode: string;
+  offChainByteCode: string;
+}
 
 function useStartingLineNumber(sourceCode?: string) {
   const functionToHighlight = useParams().selectedFnName;
@@ -123,7 +132,8 @@ function ExpandCode({sourceCode}: {sourceCode: string | undefined}) {
 }
 
 export function Code({bytecode}: {bytecode: string}) {
-  const {selectedModuleName} = useParams();
+  const {address, selectedModuleName} = useParams();
+  console.log("Code ", address, selectedModuleName);
   const logEvent = useLogEventWithBasic();
 
   const TOOLTIP_TIME = 2000; // 2s
@@ -134,6 +144,7 @@ export function Code({bytecode}: {bytecode: string}) {
   const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
 
   const [verified, setVerified] = useState(false);
+  const [verifyInProgress, setVerifyInProgress] = useState(false);
   const wdsBack = useWdsBackend();
 
   async function copyCode(event: React.MouseEvent<HTMLButtonElement>) {
@@ -154,16 +165,24 @@ export function Code({bytecode}: {bytecode: string}) {
       codeBoxScrollRef.current.scrollTop =
         LINE_HEIGHT_IN_PX * startingLineNumber;
     }
-    const query =
-      "chainId=testnet&account=0xf95cf666ff5bad6b70cfbbd1203a523fff7657526bf335c8217c40a814f81462&moduleName=marketplace_bid_utils";
-    wdsBack("GET", "verification/aptos/verify-check", query).then((res) => {
+    const chainId = "testnet";
+    const query = `chainId=${chainId}&account=${address}&moduleName=${selectedModuleName}`;
+    wdsBack("verification/aptos/verify-check", query).then((res) => {
       const verifyCheck = res as VerifyCheckResponse;
       setVerified(verifyCheck.isVerified);
     });
   });
 
   const verifyClick = () => {
-    console.log("verifyClick");
+    setVerifyInProgress(true);
+    const chainId = "testnet";
+    const timestamp = new Date().getTime().toString();
+    const query = `chainId=${chainId}&account=${address}&moduleName=${selectedModuleName}&timestamp=${timestamp}`;
+    wdsBack("verification/aptos", query).then((res) => {
+      setVerifyInProgress(false);
+      const verify = res as VerifyResponse;
+      setVerified(verify.isVerified);
+    });
   };
 
   return (
@@ -184,7 +203,12 @@ export function Code({bytecode}: {bytecode: string}) {
           <Typography fontSize={20} fontWeight={700}>
             Code
           </Typography>
-          <StyledLearnMoreTooltip text="Please be aware that this code was provided by the owner and it could be different to the real code on blockchain. We can not not verify it." />
+          {verified ? (
+            <span>✅</span>
+          ) : (
+            <StyledLearnMoreTooltip text="Please be aware that this code was provided by the owner and it could be different to the real code on blockchain. We can not not verify it." />
+          )}
+
           {/*<Typography
               fontSize={20}
               fontWeight={700}
@@ -196,17 +220,18 @@ export function Code({bytecode}: {bytecode: string}) {
           <span style={{marginLeft: "20px"}}>
             <Button
               type="submit"
-              // disabled={transactionInProcess || !formValid}
+              disabled={verifyInProgress || verified}
               variant="contained"
               sx={{width: "8rem", height: "3rem"}}
               onClick={verifyClick}
             >
-              Verify
-              {/*{transactionInProcess ? (
+              {verifyInProgress ? (
                 <CircularProgress size={30}></CircularProgress>
+              ) : verified ? (
+                "Verified"
               ) : (
-                "Run"
-              )}*/}
+                "Verify"
+              )}
             </Button>
           </span>
         </Stack>
@@ -250,18 +275,19 @@ export function Code({bytecode}: {bytecode: string}) {
           </Stack>
         )}
       </Stack>
-      {sourceCode && (
-        <Typography
-          variant="body1"
-          fontSize={14}
-          fontWeight={400}
-          marginBottom={"16px"}
-          color={theme.palette.mode === "dark" ? grey[400] : grey[600]}
-        >
-          The source code is plain text uploaded by the deployer, which can be
-          different from the actual bytecode.
-        </Typography>
-      )}
+      {sourceCode &&
+        (verified ? null : (
+          <Typography
+            variant="body1"
+            fontSize={14}
+            fontWeight={400}
+            marginBottom={"16px"}
+            color={theme.palette.mode === "dark" ? grey[400] : grey[600]}
+          >
+            The source code is plain text uploaded by the deployer, which can be
+            different from the actual bytecode.
+          </Typography>
+        ))}
       {!sourceCode ? (
         <Box>
           Unfortunately, the source code cannot be shown because the package
