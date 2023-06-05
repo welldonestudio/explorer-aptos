@@ -41,6 +41,7 @@ interface ModuleContentProps {
 
 function ViewCode({address}: {address: string}): JSX.Element {
   const sortedPackages: PackageMetadata[] = useGetAccountPackages(address);
+  console.log("ViewCode address", address);
 
   const navigate = useNavigate();
 
@@ -174,6 +175,7 @@ function ModuleSidebar({
 }
 
 function ModuleContent({address, moduleName, bytecode}: ModuleContentProps) {
+  console.log("ModuleContent moduleName", moduleName);
   const theme = useTheme();
   return (
     <Stack

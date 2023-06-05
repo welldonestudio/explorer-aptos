@@ -1,4 +1,12 @@
-import {Box, Button, Modal, Stack, Typography, useTheme} from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Modal,
+  Stack,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import {ContentCopy, OpenInFull} from "@mui/icons-material";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import {getPublicFunctionLineNumber, transformCode} from "../../../utils";
@@ -18,6 +26,15 @@ import {
 } from "../../../themes/colors/aptosColorPalette";
 import {useParams} from "react-router-dom";
 import {useLogEventWithBasic} from "../hooks/useLogEventWithBasic";
+import {blue} from "@mui/material/colors";
+import useWdsBackend from "../../../api/hooks/useWdsBackend";
+
+export interface VerifyCheckResponse {
+  chainId: string;
+  account: string;
+  moduleName: string;
+  isVerified: boolean;
+}
 
 function useStartingLineNumber(sourceCode?: string) {
   const functionToHighlight = useParams().selectedFnName;
@@ -116,6 +133,9 @@ export function Code({bytecode}: {bytecode: string}) {
   const theme = useTheme();
   const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
 
+  const [verified, setVerified] = useState(false);
+  const wdsBack = useWdsBackend();
+
   async function copyCode(event: React.MouseEvent<HTMLButtonElement>) {
     if (!sourceCode) return;
 
@@ -134,7 +154,17 @@ export function Code({bytecode}: {bytecode: string}) {
       codeBoxScrollRef.current.scrollTop =
         LINE_HEIGHT_IN_PX * startingLineNumber;
     }
+    const query =
+      "chainId=testnet&account=0xf95cf666ff5bad6b70cfbbd1203a523fff7657526bf335c8217c40a814f81462&moduleName=marketplace_bid_utils";
+    wdsBack("GET", "verification/aptos/verify-check", query).then((res) => {
+      const verifyCheck = res as VerifyCheckResponse;
+      setVerified(verifyCheck.isVerified);
+    });
   });
+
+  const verifyClick = () => {
+    console.log("verifyClick");
+  };
 
   return (
     <Box>
@@ -155,6 +185,30 @@ export function Code({bytecode}: {bytecode: string}) {
             Code
           </Typography>
           <StyledLearnMoreTooltip text="Please be aware that this code was provided by the owner and it could be different to the real code on blockchain. We can not not verify it." />
+          {/*<Typography
+              fontSize={20}
+              fontWeight={700}
+              marginLeft={"16px"}
+              color={theme.palette.mode === "dark" ? blue[400] : blue[600]}
+          >
+              Verify
+          </Typography>*/}
+          <span style={{marginLeft: "20px"}}>
+            <Button
+              type="submit"
+              // disabled={transactionInProcess || !formValid}
+              variant="contained"
+              sx={{width: "8rem", height: "3rem"}}
+              onClick={verifyClick}
+            >
+              Verify
+              {/*{transactionInProcess ? (
+                <CircularProgress size={30}></CircularProgress>
+              ) : (
+                "Run"
+              )}*/}
+            </Button>
+          </span>
         </Stack>
         {sourceCode && (
           <Stack direction="row" spacing={2}>
