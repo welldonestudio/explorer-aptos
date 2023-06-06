@@ -9,7 +9,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import React, {useEffect, useMemo} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import Error from "../../Error";
 import {useGetAccountModule} from "../../../../api/hooks/useGetAccountModule";
 import {
@@ -45,7 +45,9 @@ interface ModuleContentProps {
 
 function ViewCode({address}: {address: string}): JSX.Element | null {
   const sortedPackages: PackageMetadata[] = useGetAccountPackages(address);
+  const wdsBack = useWdsBackend();
   const [state, _setState] = useGlobalState();
+  // const [isVerifiedSetting, setIsVerifiedSetting] = useState(true);
   const {
     data: policies,
     isLoading,
@@ -78,6 +80,8 @@ function ViewCode({address}: {address: string}): JSX.Element | null {
     sortedPackage["upgrade_number"] = policy.upgrade_number;
     sortedPackage["upgrade_policy"] = policy.upgrade_policy;
   }
+
+  // console.log('sortedPackages', sortedPackages);
 
   if (sortedPackages.length === 0) {
     return <EmptyTabContent />;
@@ -151,7 +155,7 @@ function ModuleSidebar({
           return (
             <Box marginBottom={3} key={pkg.name}>
               <Typography fontSize={14} fontWeight={600} marginY={"12px"}>
-                {pkg.name}{" "}
+                {pkg.name} {/*{pkg.isVerified ? <span>✅</span> : null}{' '}*/}
                 {pkg.upgrade_policy?.policy === 1 ? (
                   <span
                     style={{marginLeft: "6px", fontSize: "12px", color: "red"}}

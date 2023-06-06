@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  Link,
   Modal,
   Stack,
   Typography,
@@ -38,12 +39,15 @@ import {
   PackageMetadata,
   InternalUpgradePolicy,
 } from "../../../api/hooks/useGetAccountResource";
+import GeneralTableHeaderCell from "../../../components/Table/GeneralTableHeaderCell";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 export interface VerifyCheckResponse {
   chainId: string;
   account: string;
   moduleName: string;
   isVerified: boolean;
+  status: string;
   internal_upgrade_number: string;
   internal_upgrade_policy: InternalUpgradePolicy;
 }
@@ -165,7 +169,9 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
   const [verified, setVerified] = useState(false);
   const [currentNum, setCurrentNum] = useState<string | undefined>("");
   const [verifiedNum, setVerifiedNum] = useState<string | undefined>("");
+  const [verifyDifferenceMsg, setVerifyDifferenceMsg] = useState<string>("");
   const [verifyInProgress, setVerifyInProgress] = useState(false);
+  // const [verifyCheckStatus, setVerifyCheckStatus] = useState<string | null>(null);
   const wdsBack = useWdsBackend();
 
   // const {
@@ -205,8 +211,18 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
     const query = `chainId=${state.network_name}&account=${address}&moduleName=${selectedModuleName}`;
     wdsBack("verification/aptos/verify-check", query).then((res) => {
       const verifyCheck = res as VerifyCheckResponse;
+      console.log("verifyCheck", verifyCheck);
+      // console.log('verifyCheck.status', verifyCheck.status);
+      if (verifyCheck.status === "VERIFIED_DIFFERENT") {
+        setVerifyDifferenceMsg(
+          "❗️ Warning: This code is different to the real code on blockchain.",
+        );
+      } else {
+        setVerifyDifferenceMsg("");
+      }
       setVerified(verifyCheck.isVerified);
       setVerifiedNum(verifyCheck.internal_upgrade_number);
+      // setVerifyCheckStatus(verifyCheck.status);
     });
   });
 
@@ -218,12 +234,20 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
     setVerifyInProgress(true);
     const timestamp = new Date().getTime().toString();
     const query = `chainId=${state.network_name}&account=${address}&moduleName=${selectedModuleName}&timestamp=${timestamp}`;
-    wdsBack("verification/aptos", query).then((res) => {
-      setVerifyInProgress(false);
-      const verify = res as VerifyResponse;
-      setVerified(verify.isVerified);
-      console.log("verify", verify);
-    });
+    wdsBack("verification/aptos", query, "load")
+      .then((res) => {
+        setVerifyInProgress(false);
+        const verify = res as VerifyResponse;
+        setVerified(verify.isVerified);
+        console.log("verify", verify);
+        // if (verify.onChainByteCode !== verify.offChainByteCode) {
+        //
+        // }
+      })
+      .catch((err) => {
+        console.log("verification/aptos Err", err);
+        setVerifyInProgress(false);
+      });
   };
 
   return (
@@ -245,7 +269,19 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
             Code
           </Typography>
           {verified ? (
-            <span>✅</span>
+            <StyledTooltip
+              placement="bottom-start"
+              title={
+                <Stack alignItems="flex-end">
+                  <Typography variant="inherit">
+                    This code is verified. So it is exactly the same as the real
+                    code on blockchain.
+                  </Typography>
+                </Stack>
+              }
+            >
+              <span style={{cursor: "default"}}>✅</span>
+            </StyledTooltip>
           ) : (
             <StyledLearnMoreTooltip text="Please be aware that this code was provided by the owner and it could be different to the real code on blockchain. We can not not verify it." />
           )}
@@ -258,10 +294,10 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
           >
               Verify
           </Typography>*/}
-          <span style={{marginLeft: "10px"}}>
+          <span style={{marginLeft: "15px"}}>
             <Button
               type="submit"
-              disabled={verifyInProgress || verified}
+              disabled={verifyInProgress || verified || verifyDifferenceMsg}
               variant="contained"
               sx={{width: "8rem", height: "3rem"}}
               onClick={verifyClick}
@@ -284,19 +320,29 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
           >
             <span style={{marginLeft: "15px"}}>
               <Typography fontSize={12}>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    marginBottom: "4px",
+                  }}
+                >
+                  upgrade_number
+                </div>
                 <span style={{fontWeight: "bold"}}>
-                  Verified number:
+                  verified:
                   <span
                     style={{
                       color: theme.palette.mode === "dark" ? "skyblue" : "blue",
                     }}
                   >
                     {" "}
-                    {!verifiedNum ? "Not yet" : verifiedNum}
+                    {!verifiedNum ? "Not yet" : verifiedNum}{" "}
+                    {/*|| (verifiedNum === '0' && verifyCheckStatus === null)*/}
                   </span>
                 </span>
                 <span style={{marginLeft: "20px", fontWeight: "bold"}}>
-                  Current number:
+                  Current:
                   <span style={{color: "red"}}> {currentNum}</span>
                 </span>
               </Typography>
@@ -345,16 +391,27 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
       </Stack>
       {sourceCode &&
         (verified ? null : (
-          <Typography
-            variant="body1"
-            fontSize={14}
-            fontWeight={400}
-            marginBottom={"16px"}
-            color={theme.palette.mode === "dark" ? grey[400] : grey[600]}
-          >
-            The source code is plain text uploaded by the deployer, which can be
-            different from the actual bytecode.
-          </Typography>
+          <>
+            {verifyDifferenceMsg ? (
+              <Typography
+                marginBottom={"16px"}
+                color={theme.palette.mode === "dark" ? "red" : "#e60000"}
+              >
+                {verifyDifferenceMsg}
+              </Typography>
+            ) : (
+              <Typography
+                variant="body1"
+                fontSize={14}
+                fontWeight={400}
+                marginBottom={"16px"}
+                color={theme.palette.mode === "dark" ? grey[400] : grey[600]}
+              >
+                The source code is plain text uploaded by the deployer, which
+                can be different from the actual bytecode.
+              </Typography>
+            )}
+          </>
         ))}
       {!sourceCode ? (
         <Box>

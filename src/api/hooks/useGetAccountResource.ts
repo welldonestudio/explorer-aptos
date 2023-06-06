@@ -22,6 +22,7 @@ export type PackageMetadata = {
   modules: ModuleMetadata[];
   upgrade_number?: string;
   upgrade_policy?: UpgradePolicy;
+  isVerified?: boolean;
 };
 
 export function useGetAccountResource(
