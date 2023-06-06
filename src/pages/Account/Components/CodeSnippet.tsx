@@ -55,7 +55,7 @@ export interface VerifyResponse {
   account: string;
   moduleName: string;
   requestedTime: number;
-  isVerified: true;
+  isVerified: boolean;
   byteCode: number;
   onChainByteCode: string;
   offChainByteCode: string;
@@ -170,6 +170,7 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
   const [currentNum, setCurrentNum] = useState<string | undefined>("");
   const [verifiedNum, setVerifiedNum] = useState<string | undefined>("");
   const [verifyDifferenceMsg, setVerifyDifferenceMsg] = useState<string>("");
+  const [isVerifyDifference, setIsVerifyDifference] = useState(true);
   const [verifyInProgress, setVerifyInProgress] = useState(false);
   // const [verifyCheckStatus, setVerifyCheckStatus] = useState<string | null>(null);
   const wdsBack = useWdsBackend();
@@ -217,8 +218,10 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
         setVerifyDifferenceMsg(
           "❗️ Warning: This code is different to the real code on blockchain.",
         );
+        setIsVerifyDifference(true);
       } else {
         setVerifyDifferenceMsg("");
+        setIsVerifyDifference(false);
       }
       setVerified(verifyCheck.isVerified);
       setVerifiedNum(verifyCheck.internal_upgrade_number);
@@ -297,7 +300,7 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
           <span style={{marginLeft: "15px"}}>
             <Button
               type="submit"
-              disabled={verifyInProgress || verified || verifyDifferenceMsg}
+              disabled={verifyInProgress || verified || isVerifyDifference}
               variant="contained"
               sx={{width: "8rem", height: "3rem"}}
               onClick={verifyClick}
