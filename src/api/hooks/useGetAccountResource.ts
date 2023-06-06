@@ -10,6 +10,9 @@ export type ModuleMetadata = {
   source: string;
 };
 
+export type InternalUpgradePolicy = {
+  policy: number;
+};
 export type UpgradePolicy = {
   policy: number;
 };
