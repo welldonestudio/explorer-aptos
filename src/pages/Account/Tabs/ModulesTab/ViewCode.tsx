@@ -23,8 +23,11 @@ import JsonViewCard from "../../../../components/IndividualPageContent/JsonViewC
 import {useParams} from "react-router-dom";
 import {useNavigate} from "../../../../routing";
 import SidebarItem from "../../Components/SidebarItem";
-import {Code} from "../../Components/CodeSnippet";
+import {Code, VerifyCheckResponse} from "../../Components/CodeSnippet";
 import {useLogEventWithBasic} from "../../hooks/useLogEventWithBasic";
+import useWdsBackend from "../../../../api/hooks/useWdsBackend";
+import {useGlobalState} from "../../../../global-config/GlobalConfig";
+import {useGetPolicies} from "../../../../api/hooks/useGetPolicies";
 
 interface ModuleSidebarProps {
   sortedPackages: PackageMetadata[];
@@ -39,14 +42,21 @@ interface ModuleContentProps {
   bytecode: string;
 }
 
-function ViewCode({address}: {address: string}): JSX.Element {
+function ViewCode({address}: {address: string}): JSX.Element | null {
   const sortedPackages: PackageMetadata[] = useGetAccountPackages(address);
-  console.log("ViewCode");
+  const [state, _setState] = useGlobalState();
+  const {
+    data: policies,
+    isLoading,
+    isError,
+    isFetched,
+  } = useGetPolicies(state.network_name, address);
 
   const navigate = useNavigate();
 
   const selectedModuleName = useParams().selectedModuleName ?? "";
   useEffect(() => {
+    console.log("useEffect");
     if (!selectedModuleName && sortedPackages.length > 0) {
       navigate(
         `/account/${address}/modules/code/${sortedPackages[0].modules[0].name}`,
@@ -56,6 +66,19 @@ function ViewCode({address}: {address: string}): JSX.Element {
       );
     }
   }, [selectedModuleName, sortedPackages]);
+
+  if (isLoading) {
+    return null;
+  }
+
+  for (const sortedPackage of sortedPackages) {
+    const policy = policies.find((el: any) => {
+      return el.name === sortedPackage.name;
+    });
+    sortedPackage["upgrade_number"] = policy.upgrade_number;
+    sortedPackage["upgrade_policy"] = policy.upgrade_policy;
+  }
+  console.log("ViewCode sortedPackage", sortedPackages);
 
   if (sortedPackages.length === 0) {
     return <EmptyTabContent />;
@@ -128,7 +151,24 @@ function ModuleSidebar({
           return (
             <Box marginBottom={3} key={pkg.name}>
               <Typography fontSize={14} fontWeight={600} marginY={"12px"}>
-                {pkg.name}
+                {pkg.name}{" "}
+                {pkg.upgrade_policy.policy === 1 ? (
+                  <span
+                    style={{marginLeft: "6px", fontSize: "12px", color: "red"}}
+                  >
+                    Mutable
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      marginLeft: "10px",
+                      fontSize: "12px",
+                      color: theme.palette.mode === "dark" ? "skyblue" : "blue",
+                    }}
+                  >
+                    Immutable
+                  </span>
+                )}
               </Typography>
               <Box>
                 {pkg.modules.map((module) => (
@@ -175,7 +215,7 @@ function ModuleSidebar({
 }
 
 function ModuleContent({address, moduleName, bytecode}: ModuleContentProps) {
-  console.log("ModuleContent");
+  // console.log("ModuleContent");
   const theme = useTheme();
   return (
     <Stack

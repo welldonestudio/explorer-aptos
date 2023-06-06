@@ -28,6 +28,8 @@ import {useParams} from "react-router-dom";
 import {useLogEventWithBasic} from "../hooks/useLogEventWithBasic";
 import {blue} from "@mui/material/colors";
 import useWdsBackend from "../../../api/hooks/useWdsBackend";
+import {useGlobalState} from "../../../global-config/GlobalConfig";
+import {useGetPolicies} from "../../../api/hooks/useGetPolicies";
 
 export interface VerifyCheckResponse {
   chainId: string;
@@ -132,8 +134,7 @@ function ExpandCode({sourceCode}: {sourceCode: string | undefined}) {
 }
 
 export function Code({bytecode}: {bytecode: string}) {
-  const {address, selectedModuleName} = useParams();
-  console.log("Code ", address, selectedModuleName);
+  const {address, selectedModuleName, modulesTab} = useParams();
   const logEvent = useLogEventWithBasic();
 
   const TOOLTIP_TIME = 2000; // 2s
@@ -143,9 +144,18 @@ export function Code({bytecode}: {bytecode: string}) {
   const theme = useTheme();
   const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
 
+  const [state, _setState] = useGlobalState();
   const [verified, setVerified] = useState(false);
   const [verifyInProgress, setVerifyInProgress] = useState(false);
   const wdsBack = useWdsBackend();
+
+  const {
+    data: policies,
+    isLoading,
+    isError,
+    isFetched,
+  } = useGetPolicies(state.network_name, address);
+  console.log(modulesTab, address, selectedModuleName, policies);
 
   async function copyCode(event: React.MouseEvent<HTMLButtonElement>) {
     if (!sourceCode) return;
@@ -165,19 +175,21 @@ export function Code({bytecode}: {bytecode: string}) {
       codeBoxScrollRef.current.scrollTop =
         LINE_HEIGHT_IN_PX * startingLineNumber;
     }
-    const chainId = "testnet";
-    const query = `chainId=${chainId}&account=${address}&moduleName=${selectedModuleName}`;
+    const query = `chainId=${state.network_name}&account=${address}&moduleName=${selectedModuleName}`;
     wdsBack("verification/aptos/verify-check", query).then((res) => {
       const verifyCheck = res as VerifyCheckResponse;
       setVerified(verifyCheck.isVerified);
     });
   });
 
+  if (isLoading) {
+    return null;
+  }
+
   const verifyClick = () => {
     setVerifyInProgress(true);
-    const chainId = "testnet";
     const timestamp = new Date().getTime().toString();
-    const query = `chainId=${chainId}&account=${address}&moduleName=${selectedModuleName}&timestamp=${timestamp}`;
+    const query = `chainId=${state.network_name}&account=${address}&moduleName=${selectedModuleName}&timestamp=${timestamp}`;
     wdsBack("verification/aptos", query).then((res) => {
       setVerifyInProgress(false);
       const verify = res as VerifyResponse;
