@@ -32,7 +32,7 @@ export default function GeneralTableRow({children, onClick}: TableRowProps) {
         "&:active": clickDisabled
           ? undefined
           : {
-              background: theme.palette.neutralShade.main,
+              background: grey[50],
               transform: "translate(0,0.1rem)",
             },
       }}
