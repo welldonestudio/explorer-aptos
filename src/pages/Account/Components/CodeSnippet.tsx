@@ -55,6 +55,8 @@ export interface VerifyResponse {
   byteCode: number;
   onChainByteCode: string;
   offChainByteCode: string;
+  internal_upgrade_number: string;
+  internal_upgrade_policy: InternalUpgradePolicy;
 }
 
 export interface CodeProps {
@@ -220,6 +222,7 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
       setVerifyInProgress(false);
       const verify = res as VerifyResponse;
       setVerified(verify.isVerified);
+      console.log("verify", verify);
     });
   };
 

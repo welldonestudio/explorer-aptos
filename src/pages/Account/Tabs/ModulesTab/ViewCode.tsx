@@ -152,7 +152,7 @@ function ModuleSidebar({
             <Box marginBottom={3} key={pkg.name}>
               <Typography fontSize={14} fontWeight={600} marginY={"12px"}>
                 {pkg.name}{" "}
-                {pkg.upgrade_policy.policy === 1 ? (
+                {pkg.upgrade_policy?.policy === 1 ? (
                   <span
                     style={{marginLeft: "6px", fontSize: "12px", color: "red"}}
                   >

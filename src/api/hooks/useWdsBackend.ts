@@ -9,7 +9,7 @@ const useWdsBackend = () => {
       throw new Error("Unexpected response");
     }
     return res.json();
-  });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 };
 
 export default useWdsBackend;
