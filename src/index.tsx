@@ -67,7 +67,7 @@ declare global {
 
 const queryClient = new QueryClient();
 
-const wallets = [
+const wallets: any[] = [
   // new PetraWallet(),
   // new PontemWallet(),
   // new MartianWallet(),
