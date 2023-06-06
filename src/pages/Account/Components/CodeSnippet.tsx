@@ -298,21 +298,33 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
               Verify
           </Typography>*/}
           <span style={{marginLeft: "15px"}}>
-            <Button
-              type="submit"
-              disabled={verifyInProgress || verified || isVerifyDifference}
-              variant="contained"
-              sx={{width: "8rem", height: "3rem"}}
-              onClick={verifyClick}
-            >
-              {verifyInProgress ? (
-                <CircularProgress size={30}></CircularProgress>
-              ) : verified ? (
-                "Verified"
-              ) : (
-                "Verify"
-              )}
-            </Button>
+            {isVerifyDifference ? (
+              <Button
+                type="submit"
+                disabled={isVerifyDifference}
+                variant="contained"
+                sx={{width: "8rem", height: "3rem"}}
+                onClick={verifyClick}
+              >
+                Verify Fail
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={verifyInProgress || verified}
+                variant="contained"
+                sx={{width: "8rem", height: "3rem"}}
+                onClick={verifyClick}
+              >
+                {verifyInProgress ? (
+                  <CircularProgress size={30}></CircularProgress>
+                ) : verified ? (
+                  "Verified"
+                ) : (
+                  "Verify"
+                )}
+              </Button>
+            )}
           </span>
           <Stack
             direction="row"
@@ -340,7 +352,11 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
                     }}
                   >
                     {" "}
-                    {!verifiedNum ? "Not yet" : verifiedNum}{" "}
+                    {!verifiedNum
+                      ? "Not yet"
+                      : isVerifyDifference
+                      ? "Not yet"
+                      : verifiedNum}{" "}
                     {/*|| (verifiedNum === '0' && verifyCheckStatus === null)*/}
                   </span>
                 </span>
