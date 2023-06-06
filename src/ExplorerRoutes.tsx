@@ -14,6 +14,7 @@ import ValidatorPage from "./pages/DelegatoryValidator";
 import AnalyticsPage from "./pages/Analytics/Index";
 
 export default function ExplorerRoutes() {
+  console.log('test');
   return (
     <ExplorerLayout>
       <Routes>

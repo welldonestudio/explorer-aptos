@@ -102,7 +102,7 @@ ReactDOM.render(
       user={{}}
     >
       <QueryClientProvider client={queryClient}>
-        <AptosWalletAdapterProvider plugins={wallets} autoConnect={true}>
+        <AptosWalletAdapterProvider plugins={wallets || []} autoConnect={false}>
           <BrowserRouter>
             <ExplorerRoutes />
           </BrowserRouter>
