@@ -36,7 +36,7 @@ import {useGlobalState} from "../../../global-config/GlobalConfig";
 import {useGetPolicies} from "../../../api/hooks/useGetPolicies";
 import {
   PackageMetadata,
-  UpgradePolicy,
+  InternalUpgradePolicy,
 } from "../../../api/hooks/useGetAccountResource";
 
 export interface VerifyCheckResponse {
@@ -44,8 +44,8 @@ export interface VerifyCheckResponse {
   account: string;
   moduleName: string;
   isVerified: boolean;
-  upgrade_number: string;
-  upgrade_policy: UpgradePolicy;
+  internal_upgrade_number: string;
+  internal_upgrade_policy: InternalUpgradePolicy;
 }
 export interface VerifyResponse {
   account: string;
@@ -204,7 +204,7 @@ export function Code({bytecode, sortedPackages}: CodeProps) {
     wdsBack("verification/aptos/verify-check", query).then((res) => {
       const verifyCheck = res as VerifyCheckResponse;
       setVerified(verifyCheck.isVerified);
-      setVerifiedNum(verifyCheck.upgrade_number);
+      setVerifiedNum(verifyCheck.internal_upgrade_number);
     });
   });
 
