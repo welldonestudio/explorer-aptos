@@ -68,9 +68,9 @@ declare global {
 const queryClient = new QueryClient();
 
 const wallets = [
-  new PetraWallet(),
-  new PontemWallet(),
-  new MartianWallet(),
+  // new PetraWallet(),
+  // new PontemWallet(),
+  // new MartianWallet(),
   // new FewchaWallet(),
   // new RiseWallet(),
   // new MSafeWalletAdapter(),
@@ -78,7 +78,7 @@ const wallets = [
   // new OpenBlockWallet(),
   // new TokenPocketWallet(),
   // new TrustWallet(),
-  new WelldoneWallet(),
+  // new WelldoneWallet(),
   // Blocto supports Testnet/Mainnet for now.
   /*
   new BloctoWallet({
@@ -90,6 +90,7 @@ const wallets = [
 
 ReactDOM.render(
   <React.StrictMode>
+    test
     <StatsigProvider
       sdkKey={
         import.meta.env.REACT_APP_STATSIG_SDK_KEY ||
