@@ -37,6 +37,7 @@ import {useLogEventWithBasic} from "../../hooks/useLogEventWithBasic";
 import {ContentCopy} from "@mui/icons-material";
 import StyledTooltip from "../../../../components/StyledTooltip";
 import {deserializeVector, encodeVectorForViewRequest} from "../../../../utils";
+import {useGetPolicies} from "../../../../api/hooks/useGetPolicies";
 
 type ContractFormType = {
   typeArgs: string[];
@@ -50,7 +51,12 @@ interface ContractSidebarProps {
   getLinkToFn(moduleName: string, fnName: string): string;
 }
 
-function Contract({address, isRead}: {address: string; isRead: boolean}) {
+interface ContractProps {
+  address: string;
+  isRead: boolean;
+}
+
+function Contract({address, isRead}: ContractProps) {
   // console.log("Contract isRead", isRead);
   const theme = useTheme();
   const isWideScreen = useMediaQuery(theme.breakpoints.up("md"));
@@ -60,6 +66,13 @@ function Contract({address, isRead}: {address: string; isRead: boolean}) {
   const selectedModule = sortedPackages
     .flatMap((pkg) => pkg.modules)
     .find((module) => module.name === selectedModuleName);
+  const [state, _setState] = useGlobalState();
+  const {
+    data: policies,
+    isLoading: getPoliciesLoading,
+    isError,
+    isFetched,
+  } = useGetPolicies(state.network_name, address);
 
   if (!isRead && !isWideScreen) {
     return (
@@ -91,8 +104,16 @@ function Contract({address, isRead}: {address: string; isRead: boolean}) {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || getPoliciesLoading) {
     return null;
+  }
+
+  for (const sortedPackage of sortedPackages) {
+    const policy = policies.find((el: any) => {
+      return el.name === sortedPackage.name;
+    });
+    sortedPackage["upgrade_number"] = policy.upgrade_number;
+    sortedPackage["upgrade_policy"] = policy.upgrade_policy;
   }
 
   if (error) {
@@ -171,7 +192,10 @@ function Contract({address, isRead}: {address: string; isRead: boolean}) {
           {module && fn && selectedModule && (
             <>
               <Divider sx={{margin: "24px 0"}} />
-              <Code bytecode={selectedModule?.source} />
+              <Code
+                bytecode={selectedModule?.source}
+                sortedPackages={sortedPackages}
+              />
             </>
           )}
         </Box>

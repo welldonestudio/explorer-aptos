@@ -40,6 +40,7 @@ interface ModuleContentProps {
   address: string;
   moduleName: string;
   bytecode: string;
+  sortedPackages?: PackageMetadata[];
 }
 
 function ViewCode({address}: {address: string}): JSX.Element | null {
@@ -56,7 +57,6 @@ function ViewCode({address}: {address: string}): JSX.Element | null {
 
   const selectedModuleName = useParams().selectedModuleName ?? "";
   useEffect(() => {
-    console.log("useEffect");
     if (!selectedModuleName && sortedPackages.length > 0) {
       navigate(
         `/account/${address}/modules/code/${sortedPackages[0].modules[0].name}`,
@@ -78,7 +78,6 @@ function ViewCode({address}: {address: string}): JSX.Element | null {
     sortedPackage["upgrade_number"] = policy.upgrade_number;
     sortedPackage["upgrade_policy"] = policy.upgrade_policy;
   }
-  console.log("ViewCode sortedPackage", sortedPackages);
 
   if (sortedPackages.length === 0) {
     return <EmptyTabContent />;
@@ -113,6 +112,7 @@ function ViewCode({address}: {address: string}): JSX.Element | null {
           />
         ) : (
           <ModuleContent
+            sortedPackages={sortedPackages}
             address={address}
             moduleName={selectedModuleName}
             bytecode={selectedModule.source}
@@ -214,7 +214,12 @@ function ModuleSidebar({
   );
 }
 
-function ModuleContent({address, moduleName, bytecode}: ModuleContentProps) {
+function ModuleContent({
+  address,
+  moduleName,
+  bytecode,
+  sortedPackages,
+}: ModuleContentProps) {
   // console.log("ModuleContent");
   const theme = useTheme();
   return (
@@ -227,7 +232,7 @@ function ModuleContent({address, moduleName, bytecode}: ModuleContentProps) {
     >
       <ModuleHeader address={address} moduleName={moduleName} />
       <Divider />
-      <Code bytecode={bytecode} />
+      <Code bytecode={bytecode} sortedPackages={sortedPackages} />
       <Divider />
       <ABI address={address} moduleName={moduleName} />
     </Stack>

@@ -9,7 +9,11 @@ import {
 } from "@mui/material";
 import {ContentCopy, OpenInFull} from "@mui/icons-material";
 import SyntaxHighlighter from "react-syntax-highlighter";
-import {getPublicFunctionLineNumber, transformCode} from "../../../utils";
+import {
+  getBytecodeSizeInKB,
+  getPublicFunctionLineNumber,
+  transformCode,
+} from "../../../utils";
 import React, {useEffect, useRef, useState} from "react";
 import StyledTooltip, {
   StyledLearnMoreTooltip,
@@ -30,12 +34,18 @@ import {blue} from "@mui/material/colors";
 import useWdsBackend from "../../../api/hooks/useWdsBackend";
 import {useGlobalState} from "../../../global-config/GlobalConfig";
 import {useGetPolicies} from "../../../api/hooks/useGetPolicies";
+import {
+  PackageMetadata,
+  UpgradePolicy,
+} from "../../../api/hooks/useGetAccountResource";
 
 export interface VerifyCheckResponse {
   chainId: string;
   account: string;
   moduleName: string;
   isVerified: boolean;
+  upgrade_number: string;
+  upgrade_policy: UpgradePolicy;
 }
 export interface VerifyResponse {
   account: string;
@@ -45,6 +55,11 @@ export interface VerifyResponse {
   byteCode: number;
   onChainByteCode: string;
   offChainByteCode: string;
+}
+
+export interface CodeProps {
+  bytecode: string;
+  sortedPackages?: PackageMetadata[];
 }
 
 function useStartingLineNumber(sourceCode?: string) {
@@ -133,7 +148,7 @@ function ExpandCode({sourceCode}: {sourceCode: string | undefined}) {
   );
 }
 
-export function Code({bytecode}: {bytecode: string}) {
+export function Code({bytecode, sortedPackages}: CodeProps) {
   const {address, selectedModuleName, modulesTab} = useParams();
   const logEvent = useLogEventWithBasic();
 
@@ -146,16 +161,24 @@ export function Code({bytecode}: {bytecode: string}) {
 
   const [state, _setState] = useGlobalState();
   const [verified, setVerified] = useState(false);
+  const [currentNum, setCurrentNum] = useState<string | undefined>("");
+  const [verifiedNum, setVerifiedNum] = useState<string | undefined>("");
   const [verifyInProgress, setVerifyInProgress] = useState(false);
   const wdsBack = useWdsBackend();
 
-  const {
-    data: policies,
-    isLoading,
-    isError,
-    isFetched,
-  } = useGetPolicies(state.network_name, address);
-  console.log(modulesTab, address, selectedModuleName, policies);
+  // const {
+  //   data: policies,
+  //   isLoading,
+  //   isError,
+  //   isFetched,
+  // } = useGetPolicies(state.network_name, address);
+
+  const selectedPackage = sortedPackages?.find((sortedPackage) => {
+    return sortedPackage.modules.find((module) => {
+      return module.name === selectedModuleName;
+    });
+  });
+  console.log(modulesTab, sortedPackages);
 
   async function copyCode(event: React.MouseEvent<HTMLButtonElement>) {
     if (!sourceCode) return;
@@ -175,16 +198,19 @@ export function Code({bytecode}: {bytecode: string}) {
       codeBoxScrollRef.current.scrollTop =
         LINE_HEIGHT_IN_PX * startingLineNumber;
     }
+    setCurrentNum(selectedPackage?.upgrade_number);
+
     const query = `chainId=${state.network_name}&account=${address}&moduleName=${selectedModuleName}`;
     wdsBack("verification/aptos/verify-check", query).then((res) => {
       const verifyCheck = res as VerifyCheckResponse;
       setVerified(verifyCheck.isVerified);
+      setVerifiedNum(verifyCheck.upgrade_number);
     });
   });
 
-  if (isLoading) {
-    return null;
-  }
+  // if (isLoading) {
+  //   return null;
+  // }
 
   const verifyClick = () => {
     setVerifyInProgress(true);
@@ -229,7 +255,7 @@ export function Code({bytecode}: {bytecode: string}) {
           >
               Verify
           </Typography>*/}
-          <span style={{marginLeft: "20px"}}>
+          <span style={{marginLeft: "10px"}}>
             <Button
               type="submit"
               disabled={verifyInProgress || verified}
@@ -246,6 +272,33 @@ export function Code({bytecode}: {bytecode: string}) {
               )}
             </Button>
           </span>
+          <Stack
+            direction="row"
+            spacing={1}
+            marginY={"16px"}
+            height={"44px"}
+            alignItems={"flex-end"}
+          >
+            <span style={{marginLeft: "15px"}}>
+              <Typography fontSize={12}>
+                <span style={{fontWeight: "bold"}}>
+                  Verified number:
+                  <span
+                    style={{
+                      color: theme.palette.mode === "dark" ? "skyblue" : "blue",
+                    }}
+                  >
+                    {" "}
+                    {!verifiedNum ? "Not yet" : verifiedNum}
+                  </span>
+                </span>
+                <span style={{marginLeft: "20px", fontWeight: "bold"}}>
+                  Current number:
+                  <span style={{color: "red"}}> {currentNum}</span>
+                </span>
+              </Typography>
+            </span>
+          </Stack>
         </Stack>
         {sourceCode && (
           <Stack direction="row" spacing={2}>
