@@ -31,10 +31,9 @@ jobs:
           role-session-name: wds-code-remix-github-action-s3-deploy
           aws-region: us-east-2
 
-      - name: Node Option
-        run: export NODE_OPTIONS="--max_old_space_size=8192"
-
       - name: Install dependencies
+        env:
+          NODE_OPTIONS: "--max_old_space_size=8192"
         run: pnpm install
 
       - name: Build
