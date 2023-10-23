@@ -37,6 +37,8 @@ jobs:
         run: pnpm install
 
       - name: Build
+        env:
+          NODE_OPTIONS: "--max_old_space_size=8192"
         run: pnpm build
 
 #      - name: After Build
