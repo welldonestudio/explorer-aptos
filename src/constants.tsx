@@ -18,6 +18,14 @@ export function isValidNetworkName(value: string): value is NetworkName {
   return value in networks;
 }
 
+export const defaultVerificationServiceUrl =
+  "http://localhost:8000/verification/aptos";
+
+export type VerificationStatus =
+  | "VERIFIED_SAME"
+  | "VERIFIED_DIFFERENT"
+  | "NOT_VERIFIED";
+
 export enum Network {
   MAINNET = "mainnet",
   TESTNET = "testnet",
